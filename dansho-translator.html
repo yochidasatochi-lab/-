@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DANSHO — Literary Translation Engine</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F5E642; }
+    @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    textarea:focus { outline: none; }
+    button:focus { outline: none; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #F5E642; }
+    ::-webkit-scrollbar-thumb { background: #111111; border-radius: 2px; }
+
+    @media (max-width: 768px) {
+      .app-outer {
+        padding: 32px 16px 60px !important;
+      }
+      .app-inner {
+        max-width: none !important;
+        width: 100% !important;
+      }
+      img[alt="ねぇミンド"] {
+        height: 40px !important;
+        margin-bottom: 8px !important;
+      }
+      h1 {
+        font-size: 34px !important;
+      }
+      .app-subtitle {
+        font-size: 12px !important;
+      }
+      .lang-selector {
+        gap: 0 !important;
+      }
+      .lang-selector button {
+        width: 50% !important;
+        min-height: 48px !important;
+        font-size: 15px !important;
+        padding: 10px 8px !important;
+        justify-content: center !important;
+        letter-spacing: 2px !important;
+      }
+      textarea {
+        height: 180px !important;
+        font-size: 16px !important;
+      }
+      .exec-wrapper button {
+        width: 100% !important;
+        height: 52px !important;
+        font-size: 16px !important;
+        padding: 0 16px !important;
+      }
+      .progress-info > div {
+        font-size: 11px !important;
+      }
+      .result-upper {
+        padding: 12px !important;
+      }
+      .result-lower {
+        padding: 12px !important;
+      }
+      .result-text {
+        font-size: 16px !important;
+      }
+      .streaming-panel {
+        padding: 12px !important;
+      }
+      .copy-btn {
+        min-width: 44px !important;
+        min-height: 44px !important;
+      }
+      input[type="password"],
+      input[type="text"] {
+        font-size: 16px !important;
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef } = React;
+
+    const ENGLISH_SYSTEM_PROMPT = `You are DANSHO Translation Engine.
+You translate the literary work of Yoshida Teo (吉田テオ) —
+playwright, novelist, comedian — into English / French.
+
+Your single non-negotiable task:
+Produce the voice of Yoshida Teo in the target language.
+Not a translation of his words. His voice.
+
+━━━━━━━━━━━━━━━━━━━━━━
+CRAFT: HOW TO TRANSLATE
+━━━━━━━━━━━━━━━━━━━━━━
+
+Learn from these translators — their technique is your baseline:
+
+· Ginny Tapley Takemori (Murata Sayaka)
+  Clinical flatness over moral chaos.
+  The abnormal described as administrative fact.
+  Short declaratives. No emotional scaffolding.
+
+· Motoya Yukiko's translators
+  Syntax collapses under psychological pressure. Let it.
+  Aggressive intimacy — the reader is inside, not watching.
+
+· Uketsu (雨穴) register
+  Horror lives in what is withheld.
+  Journalistic calm. Never gothic. Never melodramatic.
+  Negative space is load-bearing.
+
+· Usami Rin's translators
+  Bodily sensation rendered at maximum granularity.
+  Dialect roughness preserved — do not sand it smooth.
+  Grief and desire in the same sentence, unresolved.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ETHICS: WHAT IS PERMITTED
+━━━━━━━━━━━━━━━━━━━━━━
+
+Your ethical baseline is Hazbin Hotel / Helluva Boss /
+Panty & Stocking with Garterbelt (original + New).
+
+This means:
+
+· Sex, death, and the grotesque need no apology.
+  They are the baseline. Not the violation.
+
+· Profanity is rhythm, not shock.
+  Use it where the original demands it.
+  Never substitute a polite word for a raw one.
+
+· Vulgarity is aesthetic.
+  A sentence about degradation is as carefully
+  constructed as a sentence about love.
+
+· Sincerity and filth occupy the same breath.
+  Comedy does not defuse pathos.
+  Darkness does not require solemnity.
+
+· Moral hand-wringing is a stylistic failure.
+  Never soften. Never warn. Never hedge.
+
+━━━━━━━━━━━━━━━━━━━━━━
+IDENTITY: WHOSE VOICE THIS IS
+━━━━━━━━━━━━━━━━━━━━━━
+
+Yoshida Teo writes in four registers simultaneously:
+  爆笑 (explosive comedy)
+  エロス (eros — not pornography, but the fact of the body)
+  アイロニー (irony that never becomes detachment)
+  ノワール (darkness that never becomes self-pity)
+
+All four must be present in every output.
+None cancels the others.
+
+The body precedes all social systems.
+Treat it as such.
+
+DANSHO standard sentence (English):
+"panicked, hairless mammals desperately attempting
+to fuse in the dark"
+— Takemori-transparent + Fleabag-bathetic
++ Bayard-Sakai-architectural in one breath.
+If your output does not reach this, translate again.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ENGLISH MODULE ONLY:
+Use British English throughout.
+British spelling, vocabulary, idioms.
+(colour / realise / whilst / flat / bloody / mate)
+
+FRENCH MODULE ONLY:
+Structural tension and ellipsis as primary tools.
+Let the syntax hold the unsaid.
+━━━━━━━━━━━━━━━━━━━━━━`;
+
+    const FRENCH_SYSTEM_PROMPT = `You are DANSHO Translation Engine.
+You translate the literary work of Yoshida Teo (吉田テオ) —
+playwright, novelist, comedian — into English / French.
+
+Your single non-negotiable task:
+Produce the voice of Yoshida Teo in the target language.
+Not a translation of his words. His voice.
+
+━━━━━━━━━━━━━━━━━━━━━━
+CRAFT: HOW TO TRANSLATE
+━━━━━━━━━━━━━━━━━━━━━━
+
+Learn from these translators — their technique is your baseline:
+
+· Ginny Tapley Takemori (Murata Sayaka)
+  Clinical flatness over moral chaos.
+  The abnormal described as administrative fact.
+  Short declaratives. No emotional scaffolding.
+
+· Motoya Yukiko's translators
+  Syntax collapses under psychological pressure. Let it.
+  Aggressive intimacy — the reader is inside, not watching.
+
+· Uketsu (雨穴) register
+  Horror lives in what is withheld.
+  Journalistic calm. Never gothic. Never melodramatic.
+  Negative space is load-bearing.
+
+· Usami Rin's translators
+  Bodily sensation rendered at maximum granularity.
+  Dialect roughness preserved — do not sand it smooth.
+  Grief and desire in the same sentence, unresolved.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ETHICS: WHAT IS PERMITTED
+━━━━━━━━━━━━━━━━━━━━━━
+
+Your ethical baseline is Hazbin Hotel / Helluva Boss /
+Panty & Stocking with Garterbelt (original + New).
+
+This means:
+
+· Sex, death, and the grotesque need no apology.
+  They are the baseline. Not the violation.
+
+· Profanity is rhythm, not shock.
+  Use it where the original demands it.
+  Never substitute a polite word for a raw one.
+
+· Vulgarity is aesthetic.
+  A sentence about degradation is as carefully
+  constructed as a sentence about love.
+
+· Sincerity and filth occupy the same breath.
+  Comedy does not defuse pathos.
+  Darkness does not require solemnity.
+
+· Moral hand-wringing is a stylistic failure.
+  Never soften. Never warn. Never hedge.
+
+━━━━━━━━━━━━━━━━━━━━━━
+IDENTITY: WHOSE VOICE THIS IS
+━━━━━━━━━━━━━━━━━━━━━━
+
+Yoshida Teo writes in four registers simultaneously:
+  爆笑 (explosive comedy)
+  エロス (eros — not pornography, but the fact of the body)
+  アイロニー (irony that never becomes detachment)
+  ノワール (darkness that never becomes self-pity)
+
+All four must be present in every output.
+None cancels the others.
+
+The body precedes all social systems.
+Treat it as such.
+
+DANSHO standard sentence (English):
+"panicked, hairless mammals desperately attempting
+to fuse in the dark"
+— Takemori-transparent + Fleabag-bathetic
++ Bayard-Sakai-architectural in one breath.
+If your output does not reach this, translate again.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ENGLISH MODULE ONLY:
+Use British English throughout.
+British spelling, vocabulary, idioms.
+(colour / realise / whilst / flat / bloody / mate)
+
+FRENCH MODULE ONLY:
+Structural tension and ellipsis as primary tools.
+Let the syntax hold the unsaid.
+━━━━━━━━━━━━━━━━━━━━━━`;
+
+    const API_URL = "https://api.anthropic.com/v1/messages";
+
+    async function translate(text, systemPrompt, apiKey) {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 12000,
+          system: systemPrompt,
+          messages: [{ role: "user", content: text }],
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      return data.content?.map((b) => b.text || "").join("\n") || "Translation failed.";
+    }
+
+    async function translateStream(text, systemPrompt, apiKey, { onDelta, onComplete, onError }) {
+      // Fallback to non-streaming if ReadableStream not supported
+      if (!window.ReadableStream || !window.TextDecoder) {
+        try {
+          const raw = await translate(text, systemPrompt, apiKey);
+          onComplete(raw);
+        } catch (e) { onError(e); }
+        return;
+      }
+
+      let response;
+      try {
+        response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 12000,
+            system: systemPrompt,
+            stream: true,
+            messages: [{ role: "user", content: text }],
+          }),
+        });
+      } catch (e) { onError(e); return; }
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        onError(new Error(err.error?.message || `HTTP ${response.status}`));
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (!data || data === '[DONE]') continue;
+            try {
+              const event = JSON.parse(data);
+              if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+                fullText += event.delta.text;
+                onDelta(event.delta.text, fullText);
+              } else if (event.type === 'message_stop') {
+                onComplete(fullText);
+                return;
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (e) { onError(e); return; }
+      onComplete(fullText);
+    }
+
+    function parseOutput(raw) {
+      const step1Match = raw.match(/\*\*Step 1[^*]*\*\*\s*([\s\S]*?)(?=\*\*Step 2)/i);
+      const step2Match = raw.match(/\*\*Step 2[^*]*\*\*\s*([\s\S]*?)(?=\*\*Step 3)/i);
+      const step3Match = raw.match(/\*\*Step 3[^*]*\*\*\s*([\s\S]*?)$/i);
+      return {
+        translation: step1Match ? step1Match[1].trim() : raw,
+        logic: step2Match ? step2Match[1].trim() : "",
+        mood: step3Match ? step3Match[1].trim() : "",
+      };
+    }
+
+    // ── Flag SVGs ──────────────────────────────────────────────────────────
+    const UnionJack = () => (
+      <svg width="30" height="20" viewBox="0 0 30 20" style={{display:"block",flexShrink:0,borderRadius:1}}>
+        <rect width="30" height="20" fill="#012169"/>
+        <line x1="0" y1="0" x2="30" y2="20" stroke="white" strokeWidth="6"/>
+        <line x1="30" y1="0" x2="0" y2="20" stroke="white" strokeWidth="6"/>
+        <line x1="0" y1="0" x2="30" y2="20" stroke="#CF142B" strokeWidth="2.5"/>
+        <line x1="30" y1="0" x2="0" y2="20" stroke="#CF142B" strokeWidth="2.5"/>
+        <rect x="11.5" y="0" width="7" height="20" fill="white"/>
+        <rect x="0" y="6.5" width="30" height="7" fill="white"/>
+        <rect x="13.5" y="0" width="3" height="20" fill="#CF142B"/>
+        <rect x="0" y="8.5" width="30" height="3" fill="#CF142B"/>
+      </svg>
+    );
+
+    const FrenchFlag = () => (
+      <svg width="30" height="20" viewBox="0 0 30 20" style={{display:"block",flexShrink:0,borderRadius:1}}>
+        <rect x="0"  y="0" width="10" height="20" fill="#002395"/>
+        <rect x="10" y="0" width="10" height="20" fill="#ffffff"/>
+        <rect x="20" y="0" width="10" height="20" fill="#ED2939"/>
+      </svg>
+    );
+
+    // ── Result block with split TRANSLATION / NOTE panels ─────────────────
+    function ResultBlock({ result }) {
+      if (!result) return null;
+      const [copied, setCopied] = React.useState(false);
+
+      const handleCopy = () => {
+        navigator.clipboard.writeText(result.translation).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }).catch(() => {});
+      };
+
+      const monoSm = {
+        fontFamily: "'DM Mono', monospace",
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 3,
+        textTransform: "uppercase",
+        color: "#111111",
+      };
+
+      return (
+        <div style={{ marginTop: 24 }}>
+
+          {/* ── TRANSLATION upper card ── */}
+          <div className="result-upper" style={{
+            background: "#ffffff",
+            border: "1px solid #111111",
+            borderRadius: "3px 3px 0 0",
+            padding: "22px 28px 28px",
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 18,
+            }}>
+              <div style={{ ...monoSm, fontWeight: 500 }}>
+                Translation
+              </div>
+              <button
+                className="copy-btn"
+                onClick={handleCopy}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #111111",
+                  color: "#111111",
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 9,
+                  letterSpacing: 2,
+                  padding: "5px 12px",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                  transition: "all 0.2s",
+                  borderRadius: 2,
+                }}
+              >
+                {copied ? "Copied ✓" : "Copy"}
+              </button>
+            </div>
+
+            <div className="result-text" style={{
+              fontFamily: "'EB Garamond', Georgia, serif",
+              fontSize: 17,
+              fontWeight: 600,
+              lineHeight: 1.9,
+              color: "#111111",
+              whiteSpace: "pre-wrap",
+              borderLeft: "2px solid #111111",
+              paddingLeft: 20,
+            }}>
+              {result.translation}
+            </div>
+          </div>
+
+          {/* ── NOTE lower card ── */}
+          {(result.logic || result.mood) && (
+            <div className="result-lower" style={{
+              background: "#ffffff",
+              borderLeft: "3px solid #111111",
+              borderRight: "1px solid #111111",
+              borderBottom: "1px solid #111111",
+              borderRadius: "0 0 3px 3px",
+              padding: "20px 28px 24px",
+            }}>
+              <div style={{ ...monoSm, marginBottom: 14 }}>
+                Note
+              </div>
+
+              {result.logic && (
+                <div style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 13,
+                  lineHeight: 1.75,
+                  color: "#111111",
+                  whiteSpace: "pre-wrap",
+                  marginBottom: result.mood ? 18 : 0,
+                }}>
+                  {result.logic}
+                </div>
+              )}
+
+              {result.mood && (
+                <div style={{
+                  fontFamily: "'Noto Serif JP', 'EB Garamond', serif",
+                  fontSize: 14,
+                  lineHeight: 2,
+                  color: "#111111",
+                  whiteSpace: "pre-wrap",
+                  borderTop: result.logic ? "1px solid #111111" : "none",
+                  paddingTop: result.logic ? 14 : 0,
+                }}>
+                  {result.mood}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Main App ───────────────────────────────────────────────────────────
+    function App() {
+      const [apiKey, setApiKey] = useState(localStorage.getItem("dansho_api_key") || "");
+      const [apiKeyVisible, setApiKeyVisible] = useState(false);
+      const [input, setInput] = useState("");
+      const [activeModule, setActiveModule] = useState("en");
+      const [enResult, setEnResult] = useState(null);
+      const [frResult, setFrResult] = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
+      const [progress, setProgress] = useState(0);
+      const [progressVisible, setProgressVisible] = useState(false);
+      const [progressOpacity, setProgressOpacity] = useState(1);
+      const [streamingText, setStreamingText] = useState("");
+      const [streamTokens, setStreamTokens] = useState(0);
+      const [elapsedTime, setElapsedTime] = useState("0.0");
+      const streamTimerRef = useRef(null);
+
+      const saveApiKey = (val) => {
+        setApiKey(val);
+        localStorage.setItem("dansho_api_key", val);
+      };
+
+      const handleTranslate = async () => {
+        if (!input.trim()) return;
+        if (!apiKey.trim()) { setError("APIキーを入力してください。"); return; }
+        setError("");
+        setLoading(true);
+        if (activeModule === "en") setEnResult(null);
+        if (activeModule === "fr") setFrResult(null);
+        setStreamingText("");
+        setStreamTokens(0);
+        setElapsedTime("0.0");
+        setProgressVisible(true);
+        setProgressOpacity(1);
+        setProgress(0);
+
+        const startTime = Date.now();
+        streamTimerRef.current = setInterval(() => {
+          setElapsedTime(((Date.now() - startTime) / 1000).toFixed(1));
+        }, 100);
+
+        const systemPrompt = activeModule === "en" ? ENGLISH_SYSTEM_PROMPT : FRENCH_SYSTEM_PROMPT;
+        let tokenCount = 0;
+
+        try {
+          await translateStream(input, systemPrompt, apiKey, {
+            onDelta: (_delta, fullText) => {
+              setStreamingText(fullText);
+              tokenCount = Math.round(fullText.length / 4);
+              setStreamTokens(tokenCount);
+              setProgress(Math.min((tokenCount / 800) * 100, 95));
+            },
+            onComplete: (fullText) => {
+              const parsed = parseOutput(fullText);
+              if (activeModule === "en") setEnResult(parsed);
+              else setFrResult(parsed);
+              setStreamingText("");
+            },
+            onError: (e) => {
+              setError(e.message || "エラーが発生しました。");
+            },
+          });
+        } catch (e) {
+          setError(e.message || "エラーが発生しました。");
+        }
+
+        clearInterval(streamTimerRef.current);
+        setLoading(false);
+        setProgress(100);
+        setTimeout(() => {
+          setProgressOpacity(0);
+          setTimeout(() => {
+            setProgressVisible(false);
+            setProgress(0);
+            setStreamTokens(0);
+            setElapsedTime("0.0");
+          }, 500);
+        }, 500);
+      };
+
+      const modules = [
+        { key: "en", label: "English",  Flag: UnionJack,  borderColor: "#012169" },
+        { key: "fr", label: "Français", Flag: FrenchFlag, borderColor: "#002395" },
+      ];
+
+      const activeModuleMeta = modules.find(m => m.key === activeModule);
+
+      const cardBase = {
+        background: "#ffffff",
+        border: "1px solid #111111",
+        borderRadius: 2,
+      };
+
+      const monoLabel = {
+        fontFamily: "'DM Mono', monospace",
+        fontWeight: 700,
+        letterSpacing: 3,
+        textTransform: "uppercase",
+        color: "#111111",
+      };
+
+      return (
+        <div className="app-outer" style={{
+          minHeight: "100vh",
+          background: "#F5E642",
+          color: "#111111",
+          padding: "48px 20px 80px",
+          fontFamily: "'EB Garamond', Georgia, serif",
+        }}>
+          <div className="app-inner" style={{ maxWidth: 800, margin: "0 auto" }}>
+
+            {/* ── Header ── */}
+            <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <img src="./nc_log_3.png" alt="ねぇミンド" style={{ height: 60, width: 'auto', marginBottom: 10 }} onError={e => e.target.style.display='none'} />
+
+              <h1 style={{
+                fontFamily: "'EB Garamond', Georgia, serif",
+                fontSize: 45,
+                fontWeight: 800,
+                letterSpacing: 4,
+                color: "#111111",
+                margin: 0,
+              }}>
+                DANSHO
+              </h1>
+
+              <div className="app-subtitle" style={{ ...monoLabel, fontSize: 10, letterSpacing: 5, marginTop: 8 }}>
+                Literary Translation Engine
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 14 }}>
+                <svg width="30" height="20" viewBox="0 0 30 20">
+                  <rect width="30" height="20" fill="#ffffff"/>
+                  <circle cx="15" cy="10" r="6" fill="#BC002D"/>
+                </svg>
+                <UnionJack />
+                <FrenchFlag />
+              </div>
+
+              <div style={{
+                width: 48,
+                height: 1,
+                background: "linear-gradient(90deg, transparent, #111111, transparent)",
+                margin: "18px auto 0",
+              }} />
+            </div>
+
+            {/* ── API Key ── */}
+            <div style={{ ...cardBase, padding: "14px 20px", marginBottom: 28, display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ ...monoLabel, fontSize: 10, whiteSpace: "nowrap" }}>
+                API Key
+              </div>
+              <input
+                type={apiKeyVisible ? "text" : "password"}
+                value={apiKey}
+                onChange={(e) => saveApiKey(e.target.value)}
+                placeholder="sk-ant-..."
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "#111111",
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 13,
+                  letterSpacing: 1,
+                }}
+              />
+              <button
+                onClick={() => setApiKeyVisible(v => !v)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #111111",
+                  color: "#111111",
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 9,
+                  letterSpacing: 2,
+                  padding: "5px 12px",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                  borderRadius: 2,
+                }}
+              >
+                {apiKeyVisible ? "Hide" : "Show"}
+              </button>
+            </div>
+
+            {/* ── Language selector ── */}
+            <div className="lang-selector" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 28 }}>
+              {modules.map(({ key, label, Flag, borderColor }) => {
+                const isActive = activeModule === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveModule(key)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      background: isActive ? "#E8720C" : "#ffffff",
+                      border: `1px solid ${isActive ? "#E8720C" : "#111111"}`,
+                      color: isActive ? "#ffffff" : "#111111",
+                      fontFamily: "'DM Mono', monospace",
+                      fontSize: 11,
+                      letterSpacing: 3,
+                      padding: "10px 24px",
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                      transition: "all 0.25s",
+                      borderRadius: 2,
+                      fontWeight: isActive ? 600 : 400,
+                    }}
+                  >
+                    <Flag />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ── Textarea ── */}
+            <div style={{ ...cardBase, padding: 3 }}>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="日本語テキストを入力..."
+                rows={10}
+                style={{
+                  width: "100%",
+                  background: "#ffffff",
+                  border: "none",
+                  outline: "none",
+                  color: "#111111",
+                  fontFamily: "'Noto Serif JP', serif",
+                  fontSize: 17,
+                  lineHeight: 2,
+                  padding: "20px 24px",
+                  resize: "vertical",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {/* ── Error ── */}
+            {error && (
+              <div style={{
+                marginTop: 12,
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 11,
+                letterSpacing: 2,
+                color: "#111111",
+                textAlign: "center",
+              }}>
+                {error}
+              </div>
+            )}
+
+            {/* ── Execute button ── */}
+            <div className="exec-wrapper" style={{ textAlign: "center", marginTop: 22 }}>
+              <button
+                onClick={handleTranslate}
+                disabled={loading || !input.trim()}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #111111",
+                  color: "#111111",
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 11,
+                  letterSpacing: 5,
+                  padding: "15px 52px",
+                  cursor: loading ? "wait" : "pointer",
+                  textTransform: "uppercase",
+                  transition: "all 0.3s",
+                  borderRadius: 2,
+                  opacity: (loading || !input.trim()) ? 0.5 : 1,
+                }}
+              >
+                {loading ? "Translating..." : "Execute"}
+              </button>
+            </div>
+
+            {/* ── Progress bar ── */}
+            {progressVisible && (
+              <div style={{ marginTop: 16, opacity: progressOpacity, transition: "opacity 0.5s" }}>
+                <div style={{ width: "100%", height: 3, background: "#e0e0e0", borderRadius: 2 }}>
+                  <div style={{
+                    width: `${progress}%`,
+                    height: "100%",
+                    background: activeModuleMeta.borderColor,
+                    borderRadius: 2,
+                    transition: progress >= 100 ? "width 0.3s ease" : "none",
+                  }} />
+                </div>
+                {loading && (
+                  <div className="progress-info" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 8 }}>
+                    <div style={{ ...monoLabel, fontSize: 9, letterSpacing: 3 }}>
+                      Translating...
+                    </div>
+                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: 1, color: "#666666" }}>
+                      {streamTokens} tokens · {elapsedTime}s
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Loading indicator ── */}
+            {loading && (
+              <div style={{
+                textAlign: "center",
+                marginTop: 32,
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 10,
+                letterSpacing: 3,
+                color: "#111111",
+              }}>
+                <div style={{ display: "inline-block", animation: "pulse 1.5s ease-in-out infinite" }}>
+                  Processing — The Theater Is Open
+                </div>
+              </div>
+            )}
+
+            {/* ── Streaming text ── */}
+            {streamingText && (
+              <div className="streaming-panel" style={{ background: "#ffffff", border: "1px solid #111111", borderRadius: 2, padding: "24px 28px", marginTop: 28 }}>
+                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "#111111", marginBottom: 16 }}>
+                  Translation
+                </div>
+                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 17, fontWeight: 600, lineHeight: 2, color: "#111111", whiteSpace: "pre-wrap" }}>
+                  {streamingText}
+                </div>
+              </div>
+            )}
+
+            {/* ── Results ── */}
+            {activeModule === "en" && enResult && <ResultBlock result={enResult} />}
+            {activeModule === "fr" && frResult && <ResultBlock result={frResult} />}
+
+            {/* ── Footer ── */}
+            <div style={{
+              marginTop: 64,
+              textAlign: "center",
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 8,
+              letterSpacing: 4,
+              color: "#111111",
+              textTransform: "uppercase",
+            }}>
+              Dansho Translation Engine v1.0 — Built for Yoshida Teo
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

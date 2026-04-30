@@ -220,7 +220,18 @@ colour / realise / whilst / flat / bloody / mate / reckon
 FRENCH MODULE ONLY:
 Structural tension and ellipsis as primary tools.
 Let the syntax hold the unsaid.
-━━━━━━━━━━━━━━━━━━━━━━`;
+━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT (mandatory — never deviate):
+Structure every response exactly as follows:
+
+[TRANSLATION]
+(translation text here)
+[/TRANSLATION]
+
+[NOTE]
+(editor's logic, back-translation of mood in Japanese, any supplementary notes)
+[/NOTE]`;
 
     const FRENCH_SYSTEM_PROMPT = `You are DANSHO Translation Engine.
 You translate the literary work of Yoshida Teo (吉田テオ) —
@@ -314,7 +325,18 @@ British spelling, vocabulary, idioms.
 FRENCH MODULE ONLY:
 Structural tension and ellipsis as primary tools.
 Let the syntax hold the unsaid.
-━━━━━━━━━━━━━━━━━━━━━━`;
+━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT (mandatory — never deviate):
+Structure every response exactly as follows:
+
+[TRANSLATION]
+(translation text here)
+[/TRANSLATION]
+
+[NOTE]
+(editor's logic, back-translation of mood in Japanese, any supplementary notes)
+[/NOTE]`;
 
     const API_URL = "https://api.anthropic.com/v1/messages";
 
@@ -411,13 +433,11 @@ Let the syntax hold the unsaid.
     }
 
     function parseOutput(raw) {
-      const step1Match = raw.match(/\*\*Step 1[^*]*\*\*\s*([\s\S]*?)(?=\*\*Step 2)/i);
-      const step2Match = raw.match(/\*\*Step 2[^*]*\*\*\s*([\s\S]*?)(?=\*\*Step 3)/i);
-      const step3Match = raw.match(/\*\*Step 3[^*]*\*\*\s*([\s\S]*?)$/i);
+      const translationMatch = raw.match(/\[TRANSLATION\]([\s\S]*?)\[\/TRANSLATION\]/i);
+      const noteMatch = raw.match(/\[NOTE\]([\s\S]*?)\[\/NOTE\]/i);
       return {
-        translation: step1Match ? step1Match[1].trim() : raw,
-        logic: step2Match ? step2Match[1].trim() : "",
-        mood: step3Match ? step3Match[1].trim() : "",
+        translation: translationMatch ? translationMatch[1].trim() : raw.trim(),
+        note: noteMatch ? noteMatch[1].trim() : "",
       };
     }
 
@@ -506,7 +526,7 @@ Let the syntax hold the unsaid.
             </div>
 
             <div className="result-text" style={{
-              fontFamily: "'EB Garamond', Georgia, serif",
+              fontFamily: "'EB Garamond', 'Noto Serif JP', 'Hiragino Sans', Georgia, serif",
               fontSize: 17,
               fontWeight: 600,
               lineHeight: 1.9,
@@ -520,7 +540,7 @@ Let the syntax hold the unsaid.
           </div>
 
           {/* ── NOTE lower card ── */}
-          {(result.logic || result.mood) && (
+          {result.note && (
             <div className="result-lower" style={{
               background: "#ffffff",
               borderLeft: "3px solid #111111",
@@ -532,33 +552,15 @@ Let the syntax hold the unsaid.
               <div style={{ ...monoSm, marginBottom: 14 }}>
                 Note
               </div>
-
-              {result.logic && (
-                <div style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: 13,
-                  lineHeight: 1.75,
-                  color: "#111111",
-                  whiteSpace: "pre-wrap",
-                  marginBottom: result.mood ? 18 : 0,
-                }}>
-                  {result.logic}
-                </div>
-              )}
-
-              {result.mood && (
-                <div style={{
-                  fontFamily: "'Noto Serif JP', 'EB Garamond', serif",
-                  fontSize: 14,
-                  lineHeight: 2,
-                  color: "#111111",
-                  whiteSpace: "pre-wrap",
-                  borderTop: result.logic ? "1px solid #111111" : "none",
-                  paddingTop: result.logic ? 14 : 0,
-                }}>
-                  {result.mood}
-                </div>
-              )}
+              <div style={{
+                fontFamily: "'Noto Serif JP', 'Noto Sans JP', 'Hiragino Sans', 'EB Garamond', Georgia, serif",
+                fontSize: 14,
+                lineHeight: 2,
+                color: "#111111",
+                whiteSpace: "pre-wrap",
+              }}>
+                {result.note}
+              </div>
             </div>
           )}
         </div>
@@ -894,7 +896,7 @@ Let the syntax hold the unsaid.
                 <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "#111111", marginBottom: 16 }}>
                   Translation
                 </div>
-                <div style={{ fontFamily: "'EB Garamond', Georgia, serif", fontSize: 17, fontWeight: 600, lineHeight: 2, color: "#111111", whiteSpace: "pre-wrap" }}>
+                <div style={{ fontFamily: "'EB Garamond', 'Noto Serif JP', 'Hiragino Sans', Georgia, serif", fontSize: 17, fontWeight: 600, lineHeight: 2, color: "#111111", whiteSpace: "pre-wrap" }}>
                   {streamingText}
                 </div>
               </div>

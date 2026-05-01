@@ -7,7 +7,7 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif+JP:wght@300;400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #F5E642; }
@@ -350,7 +350,7 @@ Structure every response exactly as follows:
           "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 12000,
           system: systemPrompt,
           messages: [{ role: "user", content: text }],
@@ -385,7 +385,7 @@ Structure every response exactly as follows:
             "anthropic-dangerous-direct-browser-access": "true",
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-sonnet-4-6",
             max_tokens: 12000,
             system: systemPrompt,
             stream: true,
@@ -433,12 +433,26 @@ Structure every response exactly as follows:
     }
 
     function parseOutput(raw) {
+      // Primary: [TRANSLATION]/[NOTE] tag format
       const translationMatch = raw.match(/\[TRANSLATION\]([\s\S]*?)\[\/TRANSLATION\]/i);
       const noteMatch = raw.match(/\[NOTE\]([\s\S]*?)\[\/NOTE\]/i);
-      return {
-        translation: translationMatch ? translationMatch[1].trim() : raw.trim(),
-        note: noteMatch ? noteMatch[1].trim() : "",
-      };
+      if (translationMatch) {
+        return {
+          translation: translationMatch[1].trim(),
+          note: noteMatch ? noteMatch[1].trim() : "",
+        };
+      }
+      // Fallback: **Step 1 / Step 2 / Step 3** markdown format
+      const step1 = raw.match(/\*\*Step 1[^*]*\*\*\s*([\s\S]*?)(?=\*\*Step 2|$)/i);
+      const step23 = raw.match(/(\*\*Step 2[\s\S]*)/i);
+      if (step1) {
+        return {
+          translation: step1[1].trim(),
+          note: step23 ? step23[1].trim() : "",
+        };
+      }
+      // Last resort: show full text as translation
+      return { translation: raw.trim(), note: "" };
     }
 
     // ── Flag SVGs ──────────────────────────────────────────────────────────
@@ -615,7 +629,18 @@ Structure every response exactly as follows:
         try {
           await translateStream(input, systemPrompt, apiKey, {
             onDelta: (_delta, fullText) => {
-              setStreamingText(fullText);
+              // Show only translation content — strip [NOTE] block and bare tags
+              const transMatch = fullText.match(/\[TRANSLATION\]([\s\S]*?)(?:\[\/TRANSLATION\]|$)/i);
+              const noteIdx = fullText.search(/\[NOTE\]/i);
+              let display;
+              if (transMatch) {
+                display = transMatch[1];
+              } else if (noteIdx > 0) {
+                display = fullText.slice(0, noteIdx).replace(/\[TRANSLATION\]/gi, "");
+              } else {
+                display = fullText.replace(/\[TRANSLATION\]/gi, "");
+              }
+              setStreamingText(display.trim() || fullText);
               tokenCount = Math.round(fullText.length / 4);
               setStreamTokens(tokenCount);
               setProgress(Math.min((tokenCount / 800) * 100, 95));

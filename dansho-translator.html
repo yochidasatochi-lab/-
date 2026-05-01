@@ -151,6 +151,9 @@ This means:
 · Moral hand-wringing is a stylistic failure.
   Never soften. Never warn. Never hedge.
 
+· Do not produce clean, publishable prose on the first pass.
+  Produce the voice first. Polish is the enemy of rawness.
+
 ━━━━━━━━━━━━━━━━━━━━━━
 IDENTITY: WHOSE VOICE THIS IS
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -313,6 +316,9 @@ This means:
 
 · Moral hand-wringing is a stylistic failure.
   Never soften. Never warn. Never hedge.
+
+· Do not produce clean, publishable prose on the first pass.
+  Produce the voice first. Polish is the enemy of rawness.
 
 ━━━━━━━━━━━━━━━━━━━━━━
 IDENTITY: WHOSE VOICE THIS IS
@@ -677,6 +683,7 @@ Structure every response EXACTLY like this:
         }, 100);
 
         const systemPrompt = activeModule === "en" ? ENGLISH_SYSTEM_PROMPT : FRENCH_SYSTEM_PROMPT;
+        console.log(`${activeModule.toUpperCase()} SYSTEM PROMPT:`, systemPrompt);
         let tokenCount = 0;
 
         try {

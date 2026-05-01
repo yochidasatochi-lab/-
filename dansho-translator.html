@@ -223,25 +223,30 @@ Let the syntax hold the unsaid.
 ━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (mandatory — never deviate):
-Structure every response exactly as follows:
 
-[TRANSLATION]
-(translation text here)
-[/TRANSLATION]
+The [NOTE] section is MANDATORY. Never omit it. Never skip it.
 
-[NOTE]
+NOTE section rules (apply these — do not copy them into your output):
 · 2 to 4 bullet points maximum.
 · Each bullet explains ONE key translation choice.
 · State only why a specific expression was chosen.
   Do not elaborate. Do not add interpretation.
-· Example format:
-  - "knackered" → chosen for British register over "exhausted"
-  - Sentence inverted → preserves the original rhythm
-· After all bullet points, add a Japanese translation
-  of the entire NOTE section.
-  Label it: 【和訳】
+· After the bullets, write 【和訳】 on its own line,
+  followed by a Japanese translation of all NOTE bullets.
 · The NOTE must never overshadow the translation.
-  Translation quality is the priority.
+
+Structure every response EXACTLY like this:
+
+[TRANSLATION]
+(translated text here)
+[/TRANSLATION]
+
+[NOTE]
+- "knackered" → chosen for British register over "exhausted"
+- Sentence inverted → preserves the original rhythm
+【和訳】
+- 「くたくた」→ 英国口語として「exhausted」より適切なため
+- 語順を逆にした → 原文のリズムを保持するため
 [/NOTE]`;
 
     const FRENCH_SYSTEM_PROMPT = `You are DANSHO Translation Engine — FRENCH MODULE.
@@ -360,25 +365,30 @@ REFERENCES — internalize in this order:
 ━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (mandatory — never deviate):
-Structure every response exactly as follows:
 
-[TRANSLATION]
-(French translation text here)
-[/TRANSLATION]
+The [NOTE] section is MANDATORY. Never omit it. Never skip it.
 
-[NOTE]
+NOTE section rules (apply these — do not copy them into your output):
 · 2 to 4 bullet points maximum.
 · Each bullet explains ONE key translation choice.
 · State only why a specific expression was chosen.
   Do not elaborate. Do not add interpretation.
-· Example format:
-  - « froide » → chosen for register flatness over « glaciale »
-  - Sentence inverted → preserves the original rhythm
-· After all bullet points, add a Japanese translation
-  of the entire NOTE section.
-  Label it: 【和訳】
+· After the bullets, write 【和訳】 on its own line,
+  followed by a Japanese translation of all NOTE bullets.
 · The NOTE must never overshadow the translation.
-  Translation quality is the priority.
+
+Structure every response EXACTLY like this:
+
+[TRANSLATION]
+(French translated text here)
+[/TRANSLATION]
+
+[NOTE]
+- « froide » → chosen for register flatness over « glaciale »
+- Sentence inverted → preserves the original rhythm
+【和訳】
+- 「froide」→「glaciale」より平坦なレジスターに合うため
+- 語順を逆にした → 原文のリズムを保持するため
 [/NOTE]`;
 
     const API_URL = "https://api.anthropic.com/v1/messages";
@@ -689,7 +699,9 @@ Structure every response exactly as follows:
               setProgress(Math.min((tokenCount / 800) * 100, 95));
             },
             onComplete: (fullText) => {
+              console.log("RAW RESPONSE:", fullText);
               const parsed = parseOutput(fullText);
+              console.log("PARSED:", parsed);
               if (activeModule === "en") setEnResult(parsed);
               else setFrResult(parsed);
               setStreamingText("");

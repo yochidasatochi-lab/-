@@ -230,7 +230,18 @@ Structure every response exactly as follows:
 [/TRANSLATION]
 
 [NOTE]
-(editor's logic, back-translation of mood in Japanese, any supplementary notes)
+· 2 to 4 bullet points maximum.
+· Each bullet explains ONE key translation choice.
+· State only why a specific expression was chosen.
+  Do not elaborate. Do not add interpretation.
+· Example format:
+  - "knackered" → chosen for British register over "exhausted"
+  - Sentence inverted → preserves the original rhythm
+· After all bullet points, add a Japanese translation
+  of the entire NOTE section.
+  Label it: 【和訳】
+· The NOTE must never overshadow the translation.
+  Translation quality is the priority.
 [/NOTE]`;
 
     const FRENCH_SYSTEM_PROMPT = `You are DANSHO Translation Engine — FRENCH MODULE.
@@ -356,7 +367,18 @@ Structure every response exactly as follows:
 [/TRANSLATION]
 
 [NOTE]
-(editor's logic, back-translation of mood in Japanese, any supplementary notes)
+· 2 to 4 bullet points maximum.
+· Each bullet explains ONE key translation choice.
+· State only why a specific expression was chosen.
+  Do not elaborate. Do not add interpretation.
+· Example format:
+  - « froide » → chosen for register flatness over « glaciale »
+  - Sentence inverted → preserves the original rhythm
+· After all bullet points, add a Japanese translation
+  of the entire NOTE section.
+  Label it: 【和訳】
+· The NOTE must never overshadow the translation.
+  Translation quality is the priority.
 [/NOTE]`;
 
     const API_URL = "https://api.anthropic.com/v1/messages";

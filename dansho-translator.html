@@ -51,11 +51,16 @@
         height: 180px !important;
         font-size: 16px !important;
       }
+      .exec-wrapper {
+        flex-direction: column !important;
+        align-items: stretch !important;
+      }
       .exec-wrapper button {
         width: 100% !important;
         height: 52px !important;
         font-size: 16px !important;
         padding: 0 16px !important;
+        justify-content: center !important;
       }
       .progress-info > div {
         font-size: 11px !important;
@@ -399,9 +404,10 @@ Structure every response EXACTLY like this:
 
     const API_URL = "https://api.anthropic.com/v1/messages";
 
-    async function translate(text, systemPrompt, apiKey) {
+    async function translate(text, systemPrompt, apiKey, signal = null) {
       const response = await fetch(API_URL, {
         method: "POST",
+        signal,
         headers: {
           "Content-Type": "application/json",
           "x-api-key": apiKey,
@@ -423,11 +429,11 @@ Structure every response EXACTLY like this:
       return data.content?.map((b) => b.text || "").join("\n") || "Translation failed.";
     }
 
-    async function translateStream(text, systemPrompt, apiKey, { onDelta, onComplete, onError }) {
+    async function translateStream(text, systemPrompt, apiKey, signal, { onDelta, onComplete, onError }) {
       // Fallback to non-streaming if ReadableStream not supported
       if (!window.ReadableStream || !window.TextDecoder) {
         try {
-          const raw = await translate(text, systemPrompt, apiKey);
+          const raw = await translate(text, systemPrompt, apiKey, signal);
           onComplete(raw);
         } catch (e) { onError(e); }
         return;
@@ -437,6 +443,7 @@ Structure every response EXACTLY like this:
       try {
         response = await fetch(API_URL, {
           method: "POST",
+          signal,
           headers: {
             "Content-Type": "application/json",
             "x-api-key": apiKey,
@@ -487,7 +494,11 @@ Structure every response EXACTLY like this:
             } catch (_) {}
           }
         }
-      } catch (e) { onError(e); return; }
+      } catch (e) {
+        reader.cancel();
+        onError(e);
+        return;
+      }
       onComplete(fullText);
     }
 
@@ -656,17 +667,36 @@ Structure every response EXACTLY like this:
       const [streamingText, setStreamingText] = useState("");
       const [streamTokens, setStreamTokens] = useState(0);
       const [elapsedTime, setElapsedTime] = useState("0.0");
+      const [cancelled, setCancelled] = useState(false);
       const streamTimerRef = useRef(null);
+      const abortControllerRef = useRef(null);
 
       const saveApiKey = (val) => {
         setApiKey(val);
         localStorage.setItem("dansho_api_key", val);
       };
 
+      const handleCancel = () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        clearInterval(streamTimerRef.current);
+        setLoading(false);
+        setStreamingText("");
+        setProgressVisible(false);
+        setProgress(0);
+        setStreamTokens(0);
+        setElapsedTime("0.0");
+        setCancelled(true);
+        setTimeout(() => setCancelled(false), 1500);
+      };
+
       const handleTranslate = async () => {
         if (!input.trim()) return;
         if (!apiKey.trim()) { setError("APIキーを入力してください。"); return; }
         setError("");
+        setCancelled(false);
+        abortControllerRef.current = new AbortController();
         setLoading(true);
         if (activeModule === "en") setEnResult(null);
         if (activeModule === "fr") setFrResult(null);
@@ -687,7 +717,7 @@ Structure every response EXACTLY like this:
         let tokenCount = 0;
 
         try {
-          await translateStream(input, systemPrompt, apiKey, {
+          await translateStream(input, systemPrompt, apiKey, abortControllerRef.current.signal, {
             onDelta: (_delta, fullText) => {
               // Show only translation content — strip [NOTE] block and bare tags
               const transMatch = fullText.match(/\[TRANSLATION\]([\s\S]*?)(?:\[\/TRANSLATION\]|$)/i);
@@ -718,10 +748,17 @@ Structure every response EXACTLY like this:
             },
           });
         } catch (e) {
-          setError(e.message || "エラーが発生しました。");
+          if (e.name !== "AbortError") {
+            setError(e.message || "エラーが発生しました。");
+          }
+          // AbortError: UI already reset by handleCancel — do nothing
         }
 
         clearInterval(streamTimerRef.current);
+
+        // Skip fade-out if cancelled — handleCancel already reset everything
+        if (abortControllerRef.current?.signal.aborted) return;
+
         setLoading(false);
         setProgress(100);
         setTimeout(() => {
@@ -912,8 +949,8 @@ Structure every response EXACTLY like this:
               </div>
             )}
 
-            {/* ── Execute button ── */}
-            <div className="exec-wrapper" style={{ textAlign: "center", marginTop: 22 }}>
+            {/* ── Execute / Cancel buttons ── */}
+            <div className="exec-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, marginTop: 22 }}>
               <button
                 onClick={handleTranslate}
                 disabled={loading || !input.trim()}
@@ -934,7 +971,44 @@ Structure every response EXACTLY like this:
               >
                 {loading ? "Translating..." : "Execute"}
               </button>
+              {loading && (
+                <button
+                  onClick={handleCancel}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid #111111",
+                    color: "#111111",
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: 11,
+                    letterSpacing: 5,
+                    padding: "15px 32px",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    transition: "background 0.2s",
+                    borderRadius: 2,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.06)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  Cancel
+                </button>
+              )}
             </div>
+
+            {/* ── Cancelled message ── */}
+            {cancelled && (
+              <div style={{
+                marginTop: 12,
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 11,
+                letterSpacing: 3,
+                color: "#111111",
+                textAlign: "center",
+                textTransform: "uppercase",
+              }}>
+                Cancelled.
+              </div>
+            )}
 
             {/* ── Progress bar ── */}
             {progressVisible && (

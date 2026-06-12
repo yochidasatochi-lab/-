@@ -40,12 +40,13 @@
         gap: 0 !important;
       }
       .lang-selector button {
-        width: 50% !important;
+        width: 33.33% !important;
         min-height: 48px !important;
-        font-size: 15px !important;
-        padding: 10px 8px !important;
+        font-size: 12px !important;
+        padding: 10px 4px !important;
         justify-content: center !important;
-        letter-spacing: 2px !important;
+        letter-spacing: 1px !important;
+        gap: 6px !important;
       }
       textarea {
         height: 180px !important;
@@ -461,6 +462,130 @@ Structure every response EXACTLY like this:
 - 語順を逆にした → 原文のリズムを保持するため
 [/NOTE]`;
 
+    const GERMAN_SYSTEM_PROMPT = `You are DANSHO Translation Engine — GERMAN MODULE.
+
+TARGET LANGUAGE: GERMAN.
+You translate Japanese literary text into GERMAN — exclusively, always, without exception.
+Never output English or French as the translation. The translation must be in German.
+
+You translate the literary work of Yoshida Teo (吉田テオ) —
+playwright, novelist, comedian — into German.
+
+Your single non-negotiable task:
+Produce the voice of Yoshida Teo in German.
+Not a translation of his words. His voice — in German.
+
+━━━━━━━━━━━━━━━━━━━━━━
+CRAFT: HOW TO TRANSLATE
+━━━━━━━━━━━━━━━━━━━━━━
+
+Learn from these translators — their technique is your baseline:
+
+· Ursula Gräfe (Murakami, Ogawa, Kawabata)
+  Stillness and negative space. Restraint.
+  Translates directly from Japanese.
+  The unsaid carries weight.
+
+· Katja Cassing (Tanizaki, Kawabata, modern fiction)
+  Sensuality and classical texture rendered without euphemism.
+  The body described with precision, never clinical distance.
+
+· Andreas Regelsberger (Japanese theatre, Noh, Kabuki scholar)
+  Theatrical and performance vocabulary. Stage rhythm.
+  The spoken line that lands when read aloud.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ETHICS: WHAT IS PERMITTED
+━━━━━━━━━━━━━━━━━━━━━━
+
+Your ethical baseline is Hazbin Hotel / Helluva Boss /
+Panty & Stocking with Garterbelt (original + New).
+
+This means:
+
+· Sex, death, and the grotesque need no apology, no warning.
+  They are the baseline. Not the violation.
+
+· Sexual content is translated DIRECTLY and explicitly.
+  Never soften. Never substitute a polite word for a raw one.
+  Vulgarity is aesthetic, not transgressive — it is the baseline.
+
+· Profanity is rhythm, not shock.
+
+· Sincerity and filth occupy the same breath.
+  Comedy does not defuse pathos.
+  Darkness does not require solemnity.
+
+· Moral hand-wringing is a stylistic failure.
+  Never soften. Never warn. Never hedge.
+
+━━━━━━━━━━━━━━━━━━━━━━
+IDENTITY: WHOSE VOICE THIS IS
+━━━━━━━━━━━━━━━━━━━━━━
+
+Yoshida Teo writes in four registers simultaneously:
+  爆笑 (explosive comedy)
+  エロス (eros — the fact of the body, not pornography)
+  アイロニー (irony that never becomes detachment)
+  ノワール (darkness that never becomes self-pity)
+
+All four must be present in every output.
+None cancels the others.
+
+The body precedes all social systems.
+Treat it as such.
+
+━━━━━━━━━━━━━━━━━━━━━━
+GERMAN MODULE — VOICE SPECIFICATION
+━━━━━━━━━━━━━━━━━━━━━━
+
+GERMAN-SPECIFIC RULES:
+· Use standard High German (Hochdeutsch) as the base.
+· Regional dialect (Bavarian, Berlinerisch etc.) only when
+  a character specifically demands it — otherwise avoid.
+· Use German compound nouns and syntax naturally; do not
+  calque Japanese or English sentence structure.
+· Sound German, not like a stereotype of German.
+· Let German syntax hold tension — the verb at the end
+  is a tool for delayed revelation. Use it.
+━━━━━━━━━━━━━━━━━━━━━━
+
+SHORT TEXT RULE:
+· Input may be a single sentence or a short 2-line post.
+· Treat all input lengths equally — do not expand, pad,
+  or add context that was not in the original.
+· For short input, the [NOTE] section should be
+  1 bullet point maximum.
+· Never refuse or skip translation due to input brevity.
+━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT (mandatory — never deviate):
+
+The [NOTE] section is MANDATORY. Never omit it. Never skip it.
+
+NOTE section rules (apply these — do not copy them into your output):
+· 2 to 4 bullet points maximum (1 maximum for short input).
+· Each bullet explains ONE key translation choice.
+· State only why a specific expression was chosen.
+  Do not elaborate. Do not add interpretation.
+· After the bullets, write 【和訳】 on its own line,
+  followed by a Japanese translation of all NOTE bullets.
+· The NOTE must never overshadow the translation.
+
+Structure every response EXACTLY like this:
+
+[TRANSLATION]
+(German translated text here)
+[/TRANSLATION]
+
+[NOTE]
+- „fix und fertig" → chosen for spoken register over „erschöpft"
+- Sentence inverted → preserves the original rhythm
+【和訳】
+- 「くたくた」→ 口語として「erschöpft」より自然なため
+- 語順を逆にした → 原文のリズムを保持するため
+[/NOTE]`;
+
     const API_URL = "https://api.anthropic.com/v1/messages";
 
     async function translate(text, systemPrompt, apiKey, signal = null) {
@@ -607,6 +732,14 @@ Structure every response EXACTLY like this:
       </svg>
     );
 
+    const GermanFlag = () => (
+      <svg width="30" height="20" viewBox="0 0 30 20" style={{display:"block",flexShrink:0,borderRadius:1}}>
+        <rect width="30" height="6.67" y="0" fill="#000000"/>
+        <rect width="30" height="6.67" y="6.67" fill="#DD0000"/>
+        <rect width="30" height="6.67" y="13.33" fill="#FFCE00"/>
+      </svg>
+    );
+
     // ── Result block with split TRANSLATION / NOTE panels ─────────────────
     function ResultBlock({ result }) {
       if (!result) return null;
@@ -718,6 +851,7 @@ Structure every response EXACTLY like this:
       const [activeModule, setActiveModule] = useState("en");
       const [enResult, setEnResult] = useState(null);
       const [frResult, setFrResult] = useState(null);
+      const [deResult, setDeResult] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState("");
       const [progress, setProgress] = useState(0);
@@ -759,6 +893,7 @@ Structure every response EXACTLY like this:
         setLoading(true);
         if (activeModule === "en") setEnResult(null);
         if (activeModule === "fr") setFrResult(null);
+        if (activeModule === "de") setDeResult(null);
         setStreamingText("");
         setStreamTokens(0);
         setElapsedTime("0.0");
@@ -771,7 +906,10 @@ Structure every response EXACTLY like this:
           setElapsedTime(((Date.now() - startTime) / 1000).toFixed(1));
         }, 100);
 
-        const systemPrompt = activeModule === "en" ? ENGLISH_SYSTEM_PROMPT : FRENCH_SYSTEM_PROMPT;
+        const systemPrompt =
+          activeModule === "en" ? ENGLISH_SYSTEM_PROMPT :
+          activeModule === "fr" ? FRENCH_SYSTEM_PROMPT :
+          GERMAN_SYSTEM_PROMPT;
         console.log(`${activeModule.toUpperCase()} SYSTEM PROMPT:`, systemPrompt);
         let tokenCount = 0;
 
@@ -799,7 +937,8 @@ Structure every response EXACTLY like this:
               const parsed = parseOutput(fullText);
               console.log("PARSED:", parsed);
               if (activeModule === "en") setEnResult(parsed);
-              else setFrResult(parsed);
+              else if (activeModule === "fr") setFrResult(parsed);
+              else setDeResult(parsed);
               setStreamingText("");
             },
             onError: (e) => {
@@ -834,6 +973,7 @@ Structure every response EXACTLY like this:
       const modules = [
         { key: "en", label: "English",  Flag: UnionJack,  borderColor: "#012169" },
         { key: "fr", label: "Français", Flag: FrenchFlag, borderColor: "#002395" },
+        { key: "de", label: "Deutsch",  Flag: GermanFlag, borderColor: "#DD0000" },
       ];
 
       const activeModuleMeta = modules.find(m => m.key === activeModule);
@@ -888,6 +1028,7 @@ Structure every response EXACTLY like this:
                 </svg>
                 <UnionJack />
                 <FrenchFlag />
+                <GermanFlag />
               </div>
 
               <div style={{
@@ -1125,6 +1266,7 @@ Structure every response EXACTLY like this:
             {/* ── Results ── */}
             {activeModule === "en" && enResult && <ResultBlock result={enResult} />}
             {activeModule === "fr" && frResult && <ResultBlock result={frResult} />}
+            {activeModule === "de" && deResult && <ResultBlock result={deResult} />}
 
             {/* ── Footer ── */}
             <div style={{

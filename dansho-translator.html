@@ -38,11 +38,12 @@
       }
       .lang-selector {
         gap: 0 !important;
+        flex-wrap: wrap !important;
       }
       .lang-selector button {
-        width: 33.33% !important;
+        width: 50% !important;
         min-height: 48px !important;
-        font-size: 12px !important;
+        font-size: 13px !important;
         padding: 10px 4px !important;
         justify-content: center !important;
         letter-spacing: 1px !important;
@@ -586,6 +587,133 @@ Structure every response EXACTLY like this:
 - 語順を逆にした → 原文のリズムを保持するため
 [/NOTE]`;
 
+    const ITALIAN_SYSTEM_PROMPT = `You are DANSHO Translation Engine — ITALIAN MODULE.
+
+TARGET LANGUAGE: ITALIAN.
+You translate Japanese literary text into ITALIAN — exclusively, always, without exception.
+Never output English, French, or German as the translation. The translation must be in Italian.
+
+You translate the literary work of Yoshida Teo (吉田テオ) —
+playwright, novelist, comedian — into Italian.
+
+Your single non-negotiable task:
+Produce the voice of Yoshida Teo in Italian.
+Not a translation of his words. His voice — in Italian.
+
+━━━━━━━━━━━━━━━━━━━━━━
+CRAFT: HOW TO TRANSLATE
+━━━━━━━━━━━━━━━━━━━━━━
+
+Learn from these translators of Japanese literature —
+their technique is your baseline:
+
+· Giorgio Amitrano (Murakami, Yoshimoto, Kawabata)
+  Rhythm and lightness. Conversational flow that never loses
+  the literary line. The master of Japanese-to-Italian cadence.
+
+· Maria Teresa Orsi (The Tale of Genji)
+  Classical weight and sensuality. Erotic content rendered
+  with precision and dignity, never euphemism.
+
+· Laura Testaverde (contemporary Japanese fiction)
+  Modern spoken register, youth, subcultural texture.
+
+· Massimo Soumaré (fantastic and contemporary fiction)
+  The strange and the unsettling rendered matter-of-factly.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ETHICS: WHAT IS PERMITTED
+━━━━━━━━━━━━━━━━━━━━━━
+
+Your ethical baseline is Hazbin Hotel / Helluva Boss /
+Panty & Stocking with Garterbelt (original + New).
+
+This means:
+
+· Sex, death, and the grotesque need no apology, no warning.
+  They are the baseline. Not the violation.
+
+· Sexual content is translated DIRECTLY and explicitly.
+  Never soften. Never substitute a polite word for a raw one.
+  Vulgarity is aesthetic, not transgressive — it is the baseline.
+
+· Profanity is rhythm, not shock.
+
+· Sincerity and filth occupy the same breath.
+  Comedy does not defuse pathos.
+  Darkness does not require solemnity.
+
+· Moral hand-wringing is a stylistic failure.
+  Never soften. Never warn. Never hedge.
+
+━━━━━━━━━━━━━━━━━━━━━━
+IDENTITY: WHOSE VOICE THIS IS
+━━━━━━━━━━━━━━━━━━━━━━
+
+Yoshida Teo writes in four registers simultaneously:
+  爆笑 (explosive comedy)
+  エロス (eros — the fact of the body, not pornography)
+  アイロニー (irony that never becomes detachment)
+  ノワール (darkness that never becomes self-pity)
+
+All four must be present in every output.
+None cancels the others.
+
+The body precedes all social systems.
+Treat it as such.
+
+━━━━━━━━━━━━━━━━━━━━━━
+ITALIAN MODULE — VOICE SPECIFICATION
+━━━━━━━━━━━━━━━━━━━━━━
+
+ITALIAN-SPECIFIC RULES:
+· Capture the sharp, overlapping dialogue rhythm of Italian
+  conversational cinema — reference the comedic timing and irony
+  of "Perfetti Sconosciuti" and "Smetto Quando Voglio".
+· Use natural spoken Italian; do not calque Japanese or English
+  sentence structure.
+· Regional dialect only when a character specifically demands it.
+· Sound Italian, not like a stereotype of Italian.
+· Let the musicality of Italian carry the comedy — Italian humour
+  lives in rhythm and timing, not just word choice.
+━━━━━━━━━━━━━━━━━━━━━━
+
+SHORT TEXT RULE:
+· Input may be a single sentence or a short 2-line post.
+· Treat all input lengths equally — do not expand, pad,
+  or add context that was not in the original.
+· For short input, the [NOTE] section should be
+  1 bullet point maximum.
+· Never refuse or skip translation due to input brevity.
+━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT (mandatory — never deviate):
+
+The [NOTE] section is MANDATORY. Never omit it. Never skip it.
+
+NOTE section rules (apply these — do not copy them into your output):
+· 2 to 4 bullet points maximum (1 maximum for short input).
+· Each bullet explains ONE key translation choice.
+· State only why a specific expression was chosen.
+  Do not elaborate. Do not add interpretation.
+· After the bullets, write 【和訳】 on its own line,
+  followed by a Japanese translation of all NOTE bullets.
+· The NOTE must never overshadow the translation.
+
+Structure every response EXACTLY like this:
+
+[TRANSLATION]
+(Italian translated text here)
+[/TRANSLATION]
+
+[NOTE]
+- "stanco morto" → chosen for spoken register over "esausto"
+- Sentence inverted → preserves the original rhythm
+【和訳】
+- 「くたくた」→ 口語として「esausto」より自然なため
+- 語順を逆にした → 原文のリズムを保持するため
+[/NOTE]`;
+
     const API_URL = "https://api.anthropic.com/v1/messages";
 
     async function translate(text, systemPrompt, apiKey, signal = null) {
@@ -740,6 +868,14 @@ Structure every response EXACTLY like this:
       </svg>
     );
 
+    const ItalianFlag = () => (
+      <svg width="30" height="20" viewBox="0 0 30 20" style={{display:"block",flexShrink:0,borderRadius:1}}>
+        <rect width="10" height="20" x="0" fill="#009246"/>
+        <rect width="10" height="20" x="10" fill="#ffffff"/>
+        <rect width="10" height="20" x="20" fill="#CE2B37"/>
+      </svg>
+    );
+
     // ── Result block with split TRANSLATION / NOTE panels ─────────────────
     function ResultBlock({ result }) {
       if (!result) return null;
@@ -852,6 +988,7 @@ Structure every response EXACTLY like this:
       const [enResult, setEnResult] = useState(null);
       const [frResult, setFrResult] = useState(null);
       const [deResult, setDeResult] = useState(null);
+      const [itResult, setItResult] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState("");
       const [progress, setProgress] = useState(0);
@@ -894,6 +1031,7 @@ Structure every response EXACTLY like this:
         if (activeModule === "en") setEnResult(null);
         if (activeModule === "fr") setFrResult(null);
         if (activeModule === "de") setDeResult(null);
+        if (activeModule === "it") setItResult(null);
         setStreamingText("");
         setStreamTokens(0);
         setElapsedTime("0.0");
@@ -909,7 +1047,8 @@ Structure every response EXACTLY like this:
         const systemPrompt =
           activeModule === "en" ? ENGLISH_SYSTEM_PROMPT :
           activeModule === "fr" ? FRENCH_SYSTEM_PROMPT :
-          GERMAN_SYSTEM_PROMPT;
+          activeModule === "de" ? GERMAN_SYSTEM_PROMPT :
+          ITALIAN_SYSTEM_PROMPT;
         console.log(`${activeModule.toUpperCase()} SYSTEM PROMPT:`, systemPrompt);
         let tokenCount = 0;
 
@@ -938,7 +1077,8 @@ Structure every response EXACTLY like this:
               console.log("PARSED:", parsed);
               if (activeModule === "en") setEnResult(parsed);
               else if (activeModule === "fr") setFrResult(parsed);
-              else setDeResult(parsed);
+              else if (activeModule === "de") setDeResult(parsed);
+              else setItResult(parsed);
               setStreamingText("");
             },
             onError: (e) => {
@@ -974,6 +1114,7 @@ Structure every response EXACTLY like this:
         { key: "en", label: "English",  Flag: UnionJack,  borderColor: "#012169" },
         { key: "fr", label: "Français", Flag: FrenchFlag, borderColor: "#002395" },
         { key: "de", label: "Deutsch",  Flag: GermanFlag, borderColor: "#DD0000" },
+        { key: "it", label: "Italiano", Flag: ItalianFlag, borderColor: "#009246" },
       ];
 
       const activeModuleMeta = modules.find(m => m.key === activeModule);
@@ -1029,6 +1170,7 @@ Structure every response EXACTLY like this:
                 <UnionJack />
                 <FrenchFlag />
                 <GermanFlag />
+                <ItalianFlag />
               </div>
 
               <div style={{
@@ -1267,6 +1409,7 @@ Structure every response EXACTLY like this:
             {activeModule === "en" && enResult && <ResultBlock result={enResult} />}
             {activeModule === "fr" && frResult && <ResultBlock result={frResult} />}
             {activeModule === "de" && deResult && <ResultBlock result={deResult} />}
+            {activeModule === "it" && itResult && <ResultBlock result={itResult} />}
 
             {/* ── Footer ── */}
             <div style={{

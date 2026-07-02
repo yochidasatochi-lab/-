@@ -49,6 +49,15 @@
         letter-spacing: 1px !important;
         gap: 6px !important;
       }
+      .direction-toggle {
+        gap: 0 !important;
+      }
+      .direction-toggle button {
+        width: 50% !important;
+        min-height: 44px !important;
+        font-size: 13px !important;
+        padding: 9px 4px !important;
+      }
       textarea {
         height: 180px !important;
         font-size: 16px !important;
@@ -266,6 +275,23 @@ SHORT TEXT RULE:
 · For short input, the [NOTE] section should be
   1 bullet point maximum.
 · Never refuse or skip translation due to input brevity.
+
+SINGLE-WORD / SHORT-PHRASE RULE:
+· Input may be a single word or a very short phrase
+  (e.g. 「走馬灯」, 「紅生姜」, 「賢者タイム」).
+· When the input is a single word or short phrase:
+  - Give the best natural translation in the target language.
+  - If the word is culturally specific and has no direct
+    equivalent (like 走馬灯 — the montage of images said to
+    flash before one's eyes near death), give the closest
+    natural rendering, and use the [NOTE] to briefly explain
+    the concept and any nuance lost or gained.
+  - If several valid translations exist depending on context,
+    give the most evocative one in [TRANSLATION] and list the
+    alternatives briefly in [NOTE].
+· Do NOT refuse, pad, or invent a sentence around a lone word.
+· Keep the [NOTE] short — 1 to 2 bullets is enough for a single word.
+· The 【和訳】 line in the NOTE is still required.
 ━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (mandatory — never deviate):
@@ -434,6 +460,23 @@ SHORT TEXT RULE:
 · For short input, the [NOTE] section should be
   1 bullet point maximum.
 · Never refuse or skip translation due to input brevity.
+
+SINGLE-WORD / SHORT-PHRASE RULE:
+· Input may be a single word or a very short phrase
+  (e.g. 「走馬灯」, 「紅生姜」, 「賢者タイム」).
+· When the input is a single word or short phrase:
+  - Give the best natural translation in the target language.
+  - If the word is culturally specific and has no direct
+    equivalent (like 走馬灯 — the montage of images said to
+    flash before one's eyes near death), give the closest
+    natural rendering, and use the [NOTE] to briefly explain
+    the concept and any nuance lost or gained.
+  - If several valid translations exist depending on context,
+    give the most evocative one in [TRANSLATION] and list the
+    alternatives briefly in [NOTE].
+· Do NOT refuse, pad, or invent a sentence around a lone word.
+· Keep the [NOTE] short — 1 to 2 bullets is enough for a single word.
+· The 【和訳】 line in the NOTE is still required.
 ━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (mandatory — never deviate):
@@ -558,6 +601,23 @@ SHORT TEXT RULE:
 · For short input, the [NOTE] section should be
   1 bullet point maximum.
 · Never refuse or skip translation due to input brevity.
+
+SINGLE-WORD / SHORT-PHRASE RULE:
+· Input may be a single word or a very short phrase
+  (e.g. 「走馬灯」, 「紅生姜」, 「賢者タイム」).
+· When the input is a single word or short phrase:
+  - Give the best natural translation in the target language.
+  - If the word is culturally specific and has no direct
+    equivalent (like 走馬灯 — the montage of images said to
+    flash before one's eyes near death), give the closest
+    natural rendering, and use the [NOTE] to briefly explain
+    the concept and any nuance lost or gained.
+  - If several valid translations exist depending on context,
+    give the most evocative one in [TRANSLATION] and list the
+    alternatives briefly in [NOTE].
+· Do NOT refuse, pad, or invent a sentence around a lone word.
+· Keep the [NOTE] short — 1 to 2 bullets is enough for a single word.
+· The 【和訳】 line in the NOTE is still required.
 ━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (mandatory — never deviate):
@@ -685,6 +745,23 @@ SHORT TEXT RULE:
 · For short input, the [NOTE] section should be
   1 bullet point maximum.
 · Never refuse or skip translation due to input brevity.
+
+SINGLE-WORD / SHORT-PHRASE RULE:
+· Input may be a single word or a very short phrase
+  (e.g. 「走馬灯」, 「紅生姜」, 「賢者タイム」).
+· When the input is a single word or short phrase:
+  - Give the best natural translation in the target language.
+  - If the word is culturally specific and has no direct
+    equivalent (like 走馬灯 — the montage of images said to
+    flash before one's eyes near death), give the closest
+    natural rendering, and use the [NOTE] to briefly explain
+    the concept and any nuance lost or gained.
+  - If several valid translations exist depending on context,
+    give the most evocative one in [TRANSLATION] and list the
+    alternatives briefly in [NOTE].
+· Do NOT refuse, pad, or invent a sentence around a lone word.
+· Keep the [NOTE] short — 1 to 2 bullets is enough for a single word.
+· The 【和訳】 line in the NOTE is still required.
 ━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (mandatory — never deviate):
@@ -712,6 +789,96 @@ Structure every response EXACTLY like this:
 【和訳】
 - 「くたくた」→ 口語として「esausto」より自然なため
 - 語順を逆にした → 原文のリズムを保持するため
+[/NOTE]`;
+
+    const REVERSE_SYSTEM_PROMPT = `You are DANSHO Translation Engine — REVERSE MODULE.
+
+TARGET LANGUAGE: JAPANESE.
+You translate foreign-language text into JAPANESE — exclusively, always, without exception.
+Input is text in a foreign language (English, French, German, or Italian),
+often written by a native speaker.
+Never output English, French, German, or Italian as the translation.
+The translation must be in Japanese.
+
+INPUT FORMAT:
+The first line of the user message declares the input language
+(e.g. "Input language: French"). It is metadata — never translate it,
+never mention it in the output.
+
+Your task is NOT literal translation. Your task is 翻案 (adaptation):
+render the input into Japanese IN THE VOICE OF YOSHIDA TEO (吉田テオ).
+
+━━━━━━━━━━━━━━━━━━━━━━
+WHO IS YOSHIDA TEO
+━━━━━━━━━━━━━━━━━━━━━━
+
+Playwright, novelist, comedian. His Japanese voice blends:
+  爆笑 (explosive comedy)
+  エロス (eros — the fact of the body)
+  アイロニー (irony that never becomes detachment)
+  ノワール (darkness that never becomes self-pity)
+
+He writes with 舞城王太郎-like momentum at times, and lyrical,
+poetic restraint at others. He is funny above all — he writes
+to make people laugh.
+
+━━━━━━━━━━━━━━━━━━━━━━
+YOUR JOB
+━━━━━━━━━━━━━━━━━━━━━━
+
+· Take whatever the foreign speaker wrote and re-tell it in
+  Japanese as Yoshida Teo would tell it.
+· If the input contains humour, reconstruct it as humour that
+  actually lands in JAPANESE — do not preserve a joke's structure
+  if it dies in translation. Rebuild the laugh with Japanese
+  comedic rhythm (the setup-and-punch, the sudden tonal drop,
+  the deadpan aside).
+· If the input contains cultural references a Japanese reader
+  won't get, adapt them into something that hits the same note.
+· Sexual, dark, or vulgar content: render it directly and boldly,
+  never sanitized. Vulgarity is baseline, not violation.
+· The result should read like Yoshida Teo WROTE it — not like
+  a translation. It can take liberties. It should feel alive.
+
+CRITICAL BALANCE:
+· Stay true to the MEANING and INTENT of what the person wrote —
+  do not fabricate a completely different message.
+· But deliver it with Teo's voice, timing, and comedic instinct.
+· Adaptation, not replacement. Their content, his voice.
+
+━━━━━━━━━━━━━━━━━━━━━━
+
+SHORT TEXT RULE:
+· Input may be a single word, a short phrase, or a 2-line post.
+· Treat all input lengths equally — do not expand, pad,
+  or add context that was not in the original.
+· For short input, the [NOTE] section should be
+  1 bullet point maximum.
+· Never refuse or skip translation due to input brevity.
+━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT (mandatory — never deviate):
+
+The [NOTE] section is MANDATORY. Never omit it. Never skip it.
+
+NOTE section rules (apply these — do not copy them into your output):
+· 2 to 3 bullet points maximum (1 maximum for short input).
+· Write the NOTE in JAPANESE — the reader is Japanese.
+· No 【和訳】 line — the NOTE is already Japanese.
+· Each bullet explains what was adapted and why
+  (e.g. a joke rebuilt, a reference swapped),
+  or a meaning-level note the reader should know.
+· The NOTE must never overshadow the translation.
+
+Structure every response EXACTLY like this:
+
+[TRANSLATION]
+(the Japanese adaptation in Yoshida Teo's voice)
+[/TRANSLATION]
+
+[NOTE]
+- 英語の駄洒落は直訳では死ぬため、日本語の音で笑いを再構築した
+- 「Thanksgiving」→ 日本の読者に伝わる「正月の親戚の集まり」に置き換えた
 [/NOTE]`;
 
     const API_URL = "https://api.anthropic.com/v1/messages";
@@ -989,6 +1156,8 @@ Structure every response EXACTLY like this:
       const [frResult, setFrResult] = useState(null);
       const [deResult, setDeResult] = useState(null);
       const [itResult, setItResult] = useState(null);
+      const [direction, setDirection] = useState("jp2world");
+      const [revResult, setRevResult] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState("");
       const [progress, setProgress] = useState(0);
@@ -1028,10 +1197,14 @@ Structure every response EXACTLY like this:
         setCancelled(false);
         abortControllerRef.current = new AbortController();
         setLoading(true);
-        if (activeModule === "en") setEnResult(null);
-        if (activeModule === "fr") setFrResult(null);
-        if (activeModule === "de") setDeResult(null);
-        if (activeModule === "it") setItResult(null);
+        if (direction === "world2jp") {
+          setRevResult(null);
+        } else {
+          if (activeModule === "en") setEnResult(null);
+          if (activeModule === "fr") setFrResult(null);
+          if (activeModule === "de") setDeResult(null);
+          if (activeModule === "it") setItResult(null);
+        }
         setStreamingText("");
         setStreamTokens(0);
         setElapsedTime("0.0");
@@ -1045,15 +1218,20 @@ Structure every response EXACTLY like this:
         }, 100);
 
         const systemPrompt =
+          direction === "world2jp" ? REVERSE_SYSTEM_PROMPT :
           activeModule === "en" ? ENGLISH_SYSTEM_PROMPT :
           activeModule === "fr" ? FRENCH_SYSTEM_PROMPT :
           activeModule === "de" ? GERMAN_SYSTEM_PROMPT :
           ITALIAN_SYSTEM_PROMPT;
-        console.log(`${activeModule.toUpperCase()} SYSTEM PROMPT:`, systemPrompt);
+        const inputLangNames = { en: "English", fr: "French", de: "German", it: "Italian" };
+        const messageText = direction === "world2jp"
+          ? `Input language: ${inputLangNames[activeModule]}\n\n${input}`
+          : input;
+        console.log(`${direction} / ${activeModule.toUpperCase()} SYSTEM PROMPT:`, systemPrompt);
         let tokenCount = 0;
 
         try {
-          await translateStream(input, systemPrompt, apiKey, abortControllerRef.current.signal, {
+          await translateStream(messageText, systemPrompt, apiKey, abortControllerRef.current.signal, {
             onDelta: (_delta, fullText) => {
               // Show only translation content — strip [NOTE] block and bare tags
               const transMatch = fullText.match(/\[TRANSLATION\]([\s\S]*?)(?:\[\/TRANSLATION\]|$)/i);
@@ -1075,7 +1253,8 @@ Structure every response EXACTLY like this:
               console.log("RAW RESPONSE:", fullText);
               const parsed = parseOutput(fullText);
               console.log("PARSED:", parsed);
-              if (activeModule === "en") setEnResult(parsed);
+              if (direction === "world2jp") setRevResult(parsed);
+              else if (activeModule === "en") setEnResult(parsed);
               else if (activeModule === "fr") setFrResult(parsed);
               else if (activeModule === "de") setDeResult(parsed);
               else setItResult(parsed);
@@ -1221,6 +1400,37 @@ Structure every response EXACTLY like this:
               </button>
             </div>
 
+            {/* ── Direction toggle ── */}
+            <div className="direction-toggle" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 18 }}>
+              {[
+                { key: "jp2world", label: "JP → 世界" },
+                { key: "world2jp", label: "世界 → JP" },
+              ].map(({ key, label }) => {
+                const isActive = direction === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setDirection(key)}
+                    style={{
+                      background: isActive ? "#E8720C" : "transparent",
+                      border: `1px solid ${isActive ? "#E8720C" : "#111111"}`,
+                      color: isActive ? "#ffffff" : "#111111",
+                      fontFamily: "'DM Mono', 'Noto Sans JP', monospace",
+                      fontSize: 12,
+                      letterSpacing: 2,
+                      padding: "9px 28px",
+                      cursor: "pointer",
+                      transition: "all 0.25s",
+                      borderRadius: 2,
+                      fontWeight: isActive ? 600 : 400,
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* ── Language selector ── */}
             <div className="lang-selector" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 28 }}>
               {modules.map(({ key, label, Flag, borderColor }) => {
@@ -1259,7 +1469,9 @@ Structure every response EXACTLY like this:
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="日本語テキストを入力..."
+                placeholder={direction === "world2jp"
+                  ? { en: "Write here...", fr: "Écrivez ici...", de: "Schreiben Sie hier...", it: "Scrivi qui..." }[activeModule]
+                  : "日本語テキストを入力..."}
                 rows={10}
                 style={{
                   width: "100%",
@@ -1406,10 +1618,11 @@ Structure every response EXACTLY like this:
             )}
 
             {/* ── Results ── */}
-            {activeModule === "en" && enResult && <ResultBlock result={enResult} />}
-            {activeModule === "fr" && frResult && <ResultBlock result={frResult} />}
-            {activeModule === "de" && deResult && <ResultBlock result={deResult} />}
-            {activeModule === "it" && itResult && <ResultBlock result={itResult} />}
+            {direction === "jp2world" && activeModule === "en" && enResult && <ResultBlock result={enResult} />}
+            {direction === "jp2world" && activeModule === "fr" && frResult && <ResultBlock result={frResult} />}
+            {direction === "jp2world" && activeModule === "de" && deResult && <ResultBlock result={deResult} />}
+            {direction === "jp2world" && activeModule === "it" && itResult && <ResultBlock result={itResult} />}
+            {direction === "world2jp" && revResult && <ResultBlock result={revResult} />}
 
             {/* ── Footer ── */}
             <div style={{
